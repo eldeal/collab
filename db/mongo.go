@@ -1,7 +1,6 @@
 package db
 
 import (
-	"fmt"
 	"log"
 
 	"gopkg.in/mgo.v2"
@@ -46,8 +45,6 @@ func UpdateTechnology(tech *Technology) *mgo.ChangeInfo {
 	defer s.Close()
 	c := s.DB("collab").C("technology")
 
-	//result := &Technology{}
-
 	info, err := c.UpsertId(tech.ID, tech)
 	if err != nil {
 		log.Fatal(err)
@@ -69,12 +66,12 @@ func NewTechnology(tech string, user string, trigger string) {
 	defer s.Close()
 	c := s.DB("collab").C("technology")
 	if err := c.Insert(new); err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
 }
 
-//AllRecords ...
+/*
 func AllRecords() {
 	s := getSession()
 	defer s.Close()
@@ -87,4 +84,4 @@ func AllRecords() {
 		panic(err)
 	}
 	fmt.Println("Results All: ", results)
-}
+} */
