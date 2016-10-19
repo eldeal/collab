@@ -8,8 +8,14 @@ import (
 	"gopkg.in/mgo.v2/bson"
 )
 
-//var session *mgo.Session
-var coll *mgo.Collection
+//Technology collects the slack user ID of people who use or want to learn a
+//given technology, identified by Name
+type Technology struct {
+	ID       string   `json:"id"`
+	Name     string   `json:"name"`
+	Users    []string `json:"users"`
+	Learners []string `json:"learners"`
+}
 
 func getSession() *mgo.Session {
 	session, err := mgo.Dial("mongodb://localhost")
@@ -19,21 +25,8 @@ func getSession() *mgo.Session {
 	return session
 }
 
-func Find() {
-
-}
-
-func FindLearners() {
-
-}
-
-type Technology struct {
-	ID       string   `json:"id"`
-	Name     string   `json:"name"`
-	Users    []string `json:"users"`
-	Learners []string `json:"learners"`
-}
-
+//FindTechnology uses the name of the technology to return the JSON document
+//stored for it.
 func FindTechnology(tech string) *Technology {
 	s := getSession()
 	defer s.Close()
@@ -47,6 +40,23 @@ func FindTechnology(tech string) *Technology {
 	return result
 }
 
+//UpdateTechnology takes a Technology and upserts the relevant JSON docuemnt
+func UpdateTechnology(tech *Technology) *mgo.ChangeInfo {
+	s := getSession()
+	defer s.Close()
+	c := s.DB("collab").C("technology")
+
+	//result := &Technology{}
+
+	info, err := c.UpsertId(tech.ID, tech)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return info
+}
+
+//NewTechnology adds a new JSON document for the technology name, adding it's
+//first user or learner determined by the triggering slack command.
 func NewTechnology(tech string, user string, trigger string) {
 	new := &Technology{Name: tech}
 	if trigger == "tech:" {
@@ -64,11 +74,14 @@ func NewTechnology(tech string, user string, trigger string) {
 
 }
 
-func NewLearning() {
-
-}
-
+//AllRecords ...
 func AllRecords() {
+	s := getSession()
+	defer s.Close()
+	c := s.DB("collab").C("technology")
+
+	results := &[]Technology{}
+
 	err := c.Find(nil).Sort("-timestamp").All(&results)
 	if err != nil {
 		panic(err)

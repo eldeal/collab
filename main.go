@@ -4,11 +4,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/eldeal/collab/db"
 	"github.com/gorilla/mux"
 )
 
+//SlackMessage is a subset of the information sent in the message body of a
+//request from Slack
 type SlackMessage struct {
 	ID      string `json:"user_id"`
 	Name    string `json:"user_name"`
@@ -16,35 +19,27 @@ type SlackMessage struct {
 	Trigger string `json:"trigger_word"` //googlebot:
 }
 
-type User struct {
-	id    string
-	tech  []Thing
-	learn []Thing
-}
-
 func main() {
 	r := mux.NewRouter()
 	s := r.PathPrefix("/collab").Subrouter()
-	s.Methods("POST").HandleFunc("/add", add)
-	//	s.Methods("POST").HandleFunc("/learning", learn)
-	s.Methods("GET").HandleFunc("/user/{name}/", findUser)
-	s.Methods("GET").HandleFunc("/technology/{name}", findTechnology)
-	s.Methods("GET").HandleFunc("/learning/{name}", findLearners)
+	s.HandleFunc("/add", add).Methods("POST")
+	//s.Methods("POST").HandleFunc("/user/{name}/", findUser)
+	//s.Methods("POST").HandleFunc("/technology/{name}", findTechnology)
+	//s.Methods("POST").HandleFunc("/learning/{name}", findLearners)
 	http.Handle("/", r)
 }
 
 func add(w http.ResponseWriter, r *http.Request) {
-	decoder := json.NewDecoder(req.Body)
-	defer req.Body.Close()
+	decoder := json.NewDecoder(r.Body)
+	defer r.Body.Close()
 	var msg SlackMessage
 	if err := decoder.Decode(&msg); err != nil {
-		panic()
+		panic(err)
 	}
 
 	// break msg.text into list of individual technologies
 	techs := msg.split()
 
-List:
 	for _, tech := range techs {
 		doc := db.FindTechnology(tech)
 		if doc == nil {
@@ -80,13 +75,8 @@ func contains(s []string, e string) bool {
 	return false
 }
 
-func (*SlackMessage) split() []string {
-	s := string.TrimPrefix(msg.Text, msg.Trigger)
-	s = string.TrimSpace(s)
-	return string.Split(s, ",")
-}
-
-func findUser(w http.ResponseWriter, r *http.Request) {
-	args := mux.Vars(r)
-	name := args["name"]
+func (msg *SlackMessage) split() []string {
+	s := strings.TrimPrefix(msg.Text, msg.Trigger)
+	s = strings.TrimSpace(s)
+	return strings.Split(s, ",")
 }
