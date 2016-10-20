@@ -37,10 +37,7 @@ func add(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	// break msg.text into list of individual technologies
-	techs := msg.split()
-
-	for _, tech := range techs {
+	for _, tech := range msg.split() {
 		doc := db.FindTechnology(tech)
 		if doc == nil {
 			db.NewTechnology(tech, msg.Name, msg.Trigger)
@@ -48,25 +45,27 @@ func add(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if msg.Trigger == "tech:" {
-			if contains(doc.Users, msg.Name) {
+			if listContains(doc.Users, msg.Name) {
 				fmt.Println(msg.Name + " is already using " + tech)
 			} else {
 				doc.Users = append(doc.Users, msg.Name)
 				db.UpdateTechnology(doc)
 			}
 		} else if msg.Trigger == "learn:" {
-			if contains(doc.Learners, msg.Name) {
+			if listContains(doc.Learners, msg.Name) {
 				fmt.Println(msg.Name + " is already learning " + tech)
 			} else {
 				doc.Learners = append(doc.Learners, msg.Name)
 				db.UpdateTechnology(doc)
 			}
+		} else {
+			fmt.Println("How very invalid of you. Try 'tech:' or 'learn:', I don't understand anything else... yet!")
 		}
 
 	}
 }
 
-func contains(s []string, e string) bool {
+func listContains(s []string, e string) bool {
 	for _, a := range s {
 		if a == e {
 			return true
