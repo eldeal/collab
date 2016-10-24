@@ -16,18 +16,24 @@ type Technology struct {
 	Learners []string `json:"learners"`
 }
 
-func getSession() *mgo.Session {
-	session, err := mgo.Dial("mongodb://localhost")
+//Mongo holds the details of an established session with MongoDB
+type Mongo struct {
+	Session *mgo.Session
+}
+
+//StartSession initializes a connection to MongoDB for use throughout the application.
+func StartSession() *Mongo {
+	s, err := mgo.Dial("mongodb://localhost")
 	if err != nil {
 		panic(err)
 	}
-	return session
+	return &Mongo{Session: s}
 }
 
 //FindTechnology uses the name of the technology to return the JSON document
 //stored for it.
-func FindTechnology(tech string) *Technology {
-	s := getSession()
+func (m *Mongo) FindTechnology(tech string) *Technology {
+	s := m.Session.Clone()
 	defer s.Close()
 	c := s.DB("collab").C("technology")
 
@@ -40,8 +46,8 @@ func FindTechnology(tech string) *Technology {
 }
 
 //UpdateTechnology takes a Technology and upserts the relevant JSON docuemnt
-func UpdateTechnology(tech *Technology) *mgo.ChangeInfo {
-	s := getSession()
+func (m *Mongo) UpdateTechnology(tech *Technology) *mgo.ChangeInfo {
+	s := m.Session.Clone()
 	defer s.Close()
 	c := s.DB("collab").C("technology")
 
@@ -54,7 +60,7 @@ func UpdateTechnology(tech *Technology) *mgo.ChangeInfo {
 
 //NewTechnology adds a new JSON document for the technology name, adding it's
 //first user or learner determined by the triggering slack command.
-func NewTechnology(tech string, user string, trigger string) {
+func (m *Mongo) NewTechnology(tech string, user string, trigger string) {
 	new := &Technology{Name: tech}
 	if trigger == "tech:" {
 		new.Users = append(new.Users, user)
@@ -62,7 +68,7 @@ func NewTechnology(tech string, user string, trigger string) {
 		new.Learners = append(new.Learners, user)
 	}
 
-	s := getSession()
+	s := m.Session.Clone()
 	defer s.Close()
 	c := s.DB("collab").C("technology")
 	if err := c.Insert(new); err != nil {

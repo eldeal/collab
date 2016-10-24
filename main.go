@@ -19,7 +19,10 @@ type SlackMessage struct {
 	Trigger string `json:"trigger_word"` //googlebot:
 }
 
+var data *db.Mongo
+
 func main() {
+	data = db.StartSession()
 	r := mux.NewRouter()
 	s := r.PathPrefix("/collab").Subrouter()
 	s.HandleFunc("/add", add).Methods("POST")
@@ -38,9 +41,9 @@ func add(w http.ResponseWriter, r *http.Request) {
 	}
 
 	for _, tech := range msg.split() {
-		doc := db.FindTechnology(tech)
+		doc := data.FindTechnology(tech)
 		if doc == nil {
-			db.NewTechnology(tech, msg.Name, msg.Trigger)
+			data.NewTechnology(tech, msg.Name, msg.Trigger)
 			continue
 		}
 
@@ -49,14 +52,14 @@ func add(w http.ResponseWriter, r *http.Request) {
 				fmt.Println(msg.Name + " is already using " + tech)
 			} else {
 				doc.Users = append(doc.Users, msg.Name)
-				db.UpdateTechnology(doc)
+				data.UpdateTechnology(doc)
 			}
 		} else if msg.Trigger == "learn:" {
 			if listContains(doc.Learners, msg.Name) {
 				fmt.Println(msg.Name + " is already learning " + tech)
 			} else {
 				doc.Learners = append(doc.Learners, msg.Name)
-				db.UpdateTechnology(doc)
+				data.UpdateTechnology(doc)
 			}
 		} else {
 			fmt.Println("How very invalid of you. Try 'tech:' or 'learn:', I don't understand anything else... yet!")
