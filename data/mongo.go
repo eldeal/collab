@@ -2,6 +2,7 @@ package data
 
 import (
 	"log"
+	"os"
 
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
@@ -18,7 +19,8 @@ var DB *Mongo
 
 //StartSession initializes a connection to MongoDB for use throughout the application.
 func StartSession() {
-	s, err := mgo.Dial("mongodb://localhost")
+	mongoURI := os.Getenv("MONGODB_URI")
+	s, err := mgo.Dial(mongoURI)
 	if err != nil {
 		panic(err)
 	}
