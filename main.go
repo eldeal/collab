@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/eldeal/collab/db"
+	"github.com/eldeal/collab/data"
 	"github.com/gorilla/mux"
 )
 
@@ -19,10 +19,8 @@ type SlackMessage struct {
 	Trigger string `json:"trigger_word"` //googlebot:
 }
 
-var data *db.Mongo
-
 func main() {
-	data = db.StartSession()
+	data.StartSession()
 	r := mux.NewRouter()
 	s := r.PathPrefix("/collab").Subrouter()
 	s.HandleFunc("/add", add).Methods("POST")
@@ -41,40 +39,22 @@ func add(w http.ResponseWriter, r *http.Request) {
 	}
 
 	for _, tech := range msg.split() {
-		doc := data.FindTechnology(tech)
+		doc := data.DB.FindTechnology(tech)
 		if doc == nil {
-			data.NewTechnology(tech, msg.Name, msg.Trigger)
+			data.DB.NewTechnology(tech, msg.Name, msg.Trigger)
 			continue
 		}
 
-		if msg.Trigger == "tech:" {
-			if listContains(doc.Users, msg.Name) {
-				fmt.Println(msg.Name + " is already using " + tech)
-			} else {
-				doc.Users = append(doc.Users, msg.Name)
-				data.UpdateTechnology(doc)
-			}
-		} else if msg.Trigger == "learn:" {
-			if listContains(doc.Learners, msg.Name) {
-				fmt.Println(msg.Name + " is already learning " + tech)
-			} else {
-				doc.Learners = append(doc.Learners, msg.Name)
-				data.UpdateTechnology(doc)
-			}
-		} else {
+		switch msg.Trigger {
+		case "tech:":
+			doc.AddUser(msg.Name, tech)
+		case "learn:":
+			doc.AddLearner(msg.Name, tech)
+		default:
 			fmt.Println("How very invalid of you. Try 'tech:' or 'learn:', I don't understand anything else... yet!")
 		}
 
 	}
-}
-
-func listContains(s []string, e string) bool {
-	for _, a := range s {
-		if a == e {
-			return true
-		}
-	}
-	return false
 }
 
 func (msg *SlackMessage) split() []string {

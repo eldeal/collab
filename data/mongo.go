@@ -1,4 +1,4 @@
-package db
+package data
 
 import (
 	"log"
@@ -7,27 +7,22 @@ import (
 	"gopkg.in/mgo.v2/bson"
 )
 
-//Technology collects the slack user ID of people who use or want to learn a
-//given technology, identified by Name
-type Technology struct {
-	ID       string   `json:"id"`
-	Name     string   `json:"name"`
-	Users    []string `json:"users"`
-	Learners []string `json:"learners"`
-}
+//type List []string
 
 //Mongo holds the details of an established session with MongoDB
 type Mongo struct {
 	Session *mgo.Session
 }
 
+var DB *Mongo
+
 //StartSession initializes a connection to MongoDB for use throughout the application.
-func StartSession() *Mongo {
+func StartSession() {
 	s, err := mgo.Dial("mongodb://localhost")
 	if err != nil {
 		panic(err)
 	}
-	return &Mongo{Session: s}
+	DB = &Mongo{Session: s}
 }
 
 //FindTechnology uses the name of the technology to return the JSON document
