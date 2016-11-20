@@ -57,7 +57,7 @@ func (m *Mongo) UpdateTechnology(tech *Technology) *mgo.ChangeInfo {
 //first user or learner determined by the triggering slack command.
 func (m *Mongo) NewTechnology(tech string, user string, trigger string) {
 	new := &Technology{Name: tech}
-	if trigger == "tech:" {
+	if trigger == "tech" {
 		new.Users = append(new.Users, user)
 	} else if trigger == "learn:" {
 		new.Learners = append(new.Learners, user)

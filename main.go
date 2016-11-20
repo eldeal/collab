@@ -1,64 +1,54 @@
 package main
 
 import (
-	"encoding/json"
-	"fmt"
-	"net/http"
+	"os"
 	"strings"
 
+	"golang.org/x/net/context"
+
+	slackbot "github.com/BeepBoopHQ/go-slackbot"
 	"github.com/eldeal/collab/data"
-	"github.com/gorilla/mux"
+	"github.com/nlopes/slack"
 )
 
-//SlackMessage is a subset of the information sent in the message body of a
-//request from Slack
-type SlackMessage struct {
-	ID      string `json:"user_id"`
-	Name    string `json:"user_name"`
-	Text    string `json:"text"`         //googlebot: What is the air-speed velocity of an unladen swallow?
-	Trigger string `json:"trigger_word"` //googlebot:
-}
-
 func main() {
-	data.StartSession()
-	r := mux.NewRouter()
-	s := r.PathPrefix("/collab").Subrouter()
-	s.HandleFunc("/add", add).Methods("POST")
-	//s.Methods("POST").HandleFunc("/user/{name}/", findUser)
-	//s.Methods("POST").HandleFunc("/technology/{name}", findTechnology)
-	//s.Methods("POST").HandleFunc("/learning/{name}", findLearners)
-	http.Handle("/", r)
+	bot := slackbot.New(os.Getenv("SLACK_TOKEN"))
+
+	toMe := bot.Messages(slackbot.DirectMessage, slackbot.DirectMention).Subrouter()
+	toMe.Hear("/tech|/technology|(?i)I know about(.*)").MessageHandler(addTech)
+	//bot.Hear("/learn|(?i)I want to learn(.*)").MessageHandler(learn)
+	//bot.Hear("/users|(?i)who knows(.*)").MessageHandler(AttachmentsHandler)
+	bot.Run()
 }
 
-func add(w http.ResponseWriter, r *http.Request) {
-	decoder := json.NewDecoder(r.Body)
-	defer r.Body.Close()
-	var msg SlackMessage
-	if err := decoder.Decode(&msg); err != nil {
-		panic(err)
+func addTech(ctx context.Context, bot *slackbot.Bot, evt *slack.MessageEvent) {
+	list := strings.Split(evt.Text, " ")
+	//trigger := list[0]
+	s := strings.TrimSpace(list[1])
+	if strings.Contains(s, " ") {
+		list = strings.Split(s, " ")
+	} else if strings.Contains(s, ",") {
+		list = strings.Split(s, ",")
+	} else {
+		list = []string{s}
 	}
 
-	for _, tech := range msg.split() {
+	for _, tech := range list {
 		doc := data.DB.FindTechnology(tech)
 		if doc == nil {
-			data.DB.NewTechnology(tech, msg.Name, msg.Trigger)
+			data.DB.NewTechnology(tech, evt.User, "tech")
 			continue
 		}
 
-		switch msg.Trigger {
-		case "tech:":
-			doc.AddUser(msg.Name, tech)
-		case "learn:":
-			doc.AddLearner(msg.Name, tech)
-		default:
-			fmt.Println("How very invalid of you. Try 'tech:' or 'learn:', I don't understand anything else... yet!")
-		}
+		//	switch msg.Trigger {
+		//	case "tech:":
+		doc.AddUser(evt.Name, tech)
+		//		case "learn:":
+		//		doc.AddLearner(msg.Name, tech)
+		//		default:
+		//			bot.Reply(evt, "You are already listed as a user of that technology.")
+		//	}
+		bot.Reply(evt, "Thanks for letting me know you use "+tech, slackbot.WithoutTyping)
 
 	}
-}
-
-func (msg *SlackMessage) split() []string {
-	s := strings.TrimPrefix(msg.Text, msg.Trigger)
-	s = strings.TrimSpace(s)
-	return strings.Split(s, ",")
 }

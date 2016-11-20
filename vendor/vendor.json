@@ -3,6 +3,12 @@
 	"ignore": "test",
 	"package": [
 		{
+			"checksumSHA1": "/2XjtIKAKznkQhMzmpZKZA4c/C0=",
+			"path": "github.com/BeepBoopHQ/go-slackbot",
+			"revision": "58027c0d5238a0604305652ea526b3c18a7cead1",
+			"revisionTime": "2016-01-19T06:39:52Z"
+		},
+		{
 			"checksumSHA1": "iIUYZyoanCQQTUaWsu8b+iOSPt4=",
 			"path": "github.com/gorilla/context",
 			"revision": "aed02d124ae4a0e94fea4541c8effd05bf0c8296",
@@ -13,6 +19,24 @@
 			"path": "github.com/gorilla/mux",
 			"revision": "9fa818a44c2bf1396a17f9d5a3c0f6dd39d2ff8e",
 			"revisionTime": "2016-06-05T23:35:21Z"
+		},
+		{
+			"checksumSHA1": "Tv59jlJDdTKNL5jrQhxt47AAAAE=",
+			"path": "github.com/nlopes/slack",
+			"revision": "e595e9d8590a04ff76407e4e7d1791d25b095c66",
+			"revisionTime": "2016-10-30T18:15:39Z"
+		},
+		{
+			"checksumSHA1": "9jjO5GjLa0XF/nfWihF02RoH4qc=",
+			"path": "golang.org/x/net/context",
+			"revision": "8b4af36cd21a1f85a7484b49feb7c79363106d8e",
+			"revisionTime": "2016-10-13T03:31:11Z"
+		},
+		{
+			"checksumSHA1": "O2sws+miRriMPObINsbwa0jnXxE=",
+			"path": "golang.org/x/net/websocket",
+			"revision": "8b4af36cd21a1f85a7484b49feb7c79363106d8e",
+			"revisionTime": "2016-10-13T03:31:11Z"
 		},
 		{
 			"checksumSHA1": "o+ZqT87RLprKCGKMboo5vCxdAvA=",
