@@ -22,6 +22,8 @@ func main() {
 }
 
 func addTech(ctx context.Context, bot *slackbot.Bot, evt *slack.MessageEvent) {
+	bot.Reply(evt, "You're telling me you know about a technology", slackbot.WithoutTyping)
+
 	list := strings.Split(evt.Text, " ")
 	//trigger := list[0]
 	s := strings.TrimSpace(list[1])
@@ -37,6 +39,7 @@ func addTech(ctx context.Context, bot *slackbot.Bot, evt *slack.MessageEvent) {
 		doc := data.DB.FindTechnology(tech)
 		if doc == nil {
 			data.DB.NewTechnology(tech, evt.User, "tech")
+			bot.Reply(evt, "No one's ever mentioned "+tech+" before!", slackbot.WithoutTyping)
 			continue
 		}
 
